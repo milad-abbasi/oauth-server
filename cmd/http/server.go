@@ -1,11 +1,14 @@
 package main
 
 import (
+	"fmt"
+
 	"github.com/brpaz/echozap"
 	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/labstack/gommon/log"
+	"github.com/milad-abbasi/oauth-server/pkg/config"
 	"go.uber.org/zap"
 )
 
@@ -28,5 +31,5 @@ func main() {
 	router.Use(middleware.Recover())
 	router.Use(echozap.ZapLogger(logger))
 
-	router.Logger.Fatal(router.Start(":1234"))
+	router.Logger.Fatal(router.Start(fmt.Sprintf("0.0.0.0:%s", config.GetWithDefault("HTTP_PORT", "1234"))))
 }
