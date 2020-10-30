@@ -1,4 +1,4 @@
-.DEFAULT_GOAL := start
+.DEFAULT_GOAL := serve
 
 # .PHONY is used for reserving tasks words
 .PHONY: start before stop restart serve
