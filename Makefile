@@ -3,19 +3,24 @@
 # .PHONY is used for reserving tasks words
 .PHONY: start before stop restart serve
 
-# Variable for filename for store running process id
+# Filename to store running process id
 PID_FILE := /tmp/oauth-server.pid
 
-# We can use such syntax to get main.go and other root Go files.
-HTTP_SERVER := ./cmd/http/server.go
+MIGRATE_DB_URI ?= postgres://postgres:example@localhost:5432/postgres?sslmode=disable
+MIGRATE_PATH ?= migrations
+MIGRATE_CMD ?= up # up | down | goto
+MIGRATE_STEPS ?= 0 # Apply all
 
-# Start task performs "go run main.go" command and writes it's process id to PID_FILE.
+migrate:
+	@go run cmd/migrate/migrate.go -d ${MIGRATE_DB_URI} -p ${MIGRATE_PATH} ${MIGRATE_CMD} ${MIGRATE_STEPS}
+
+# Start task starts http server up and writes it's process id to PID_FILE.
 start:
-	@go run ${HTTP_SERVER} 2>&1 & echo $$! > ${PID_FILE}
+	@go run cmd/http/server.go 2>&1 & echo $$! > ${PID_FILE}
 # You can also use go build command for start task
 # start:
-#   go build -o /bin/my-app . && \
-#   /bin/my-app & echo $$! > $(PID_FILE)
+#   go build -o /bin/http-server cmd/http/server.go && \
+#   /bin/http-server 2>&1 & echo $$! > ${PID_FILE}
 
 # Stop task will kill process by ID stored in PID_FILE (and all child processes by pstree).
 stop:
@@ -23,11 +28,11 @@ stop:
 
 # Before task will only prints message. Actually, it is not necessary. You can remove it, if you want.
 before:
-	@echo "STOPED my-app" && printf '%*s\n' "40" '' | tr ' ' -
+	@echo "STOPED server" && printf '%*s\n' "40" '' | tr ' ' -
 
 # Restart task will execute stop, before and start tasks in strict order and prints message.
 restart: stop before start
-	@echo "STARTED my-app" && printf '%*s\n' "40" '' | tr ' ' -
+	@echo "STARTED server" && printf '%*s\n' "40" '' | tr ' ' -
 
 # Serve task will run fswatch monitor and performs restart task if any source file changed. Before serving it will execute start task.
 serve: start

@@ -1,1 +1,1 @@
-DROP TABLE IF EXISTS go_users;
+DROP TABLE IF EXISTS users;
