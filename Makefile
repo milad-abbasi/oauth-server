@@ -9,10 +9,10 @@ PID_FILE := /tmp/oauth-server.pid
 MIGRATE_DB_URI ?= postgres://postgres:example@localhost:5432/postgres?sslmode=disable
 MIGRATE_PATH ?= migrations
 MIGRATE_CMD ?= up # up | down | goto
-MIGRATE_STEPS ?= 0 # Apply all
+MIGRATE_STEPS ?= 0 # Zero means apply all
 
 migrate:
-	@go run cmd/migrate/migrate.go -d ${MIGRATE_DB_URI} -p ${MIGRATE_PATH} ${MIGRATE_CMD} ${MIGRATE_STEPS}
+	@go run cmd/cli/*.go migrate -d ${MIGRATE_DB_URI} -p ${MIGRATE_PATH} ${MIGRATE_CMD} ${MIGRATE_STEPS}
 
 # Start task starts http server up and writes it's process id to PID_FILE.
 start:
