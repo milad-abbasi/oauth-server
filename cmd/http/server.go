@@ -8,8 +8,9 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/labstack/gommon/log"
+	"github.com/milad-abbasi/oauth-server/pkg/auth"
 	"github.com/milad-abbasi/oauth-server/pkg/config"
-	userController "github.com/milad-abbasi/oauth-server/pkg/user/controller"
+	"github.com/milad-abbasi/oauth-server/pkg/user"
 	"go.uber.org/zap"
 )
 
@@ -35,7 +36,8 @@ func main() {
 	router.Use(middleware.CORS())
 	router.Use(middleware.Recover())
 	router.Use(echozap.ZapLogger(logger))
-	userController.RegisterRoutes(router)
+	auth.RegisterRoutes(router)
+	user.RegisterRoutes(router)
 
 	router.Logger.Fatal(router.Start(fmt.Sprintf("0.0.0.0:%s", config.GetWithDefault("HTTP_PORT", "1234"))))
 }
