@@ -1,0 +1,8 @@
+CREATE TABLE IF NOT EXISTS users(
+   id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+   name VARCHAR(30),
+   email VARCHAR(300) UNIQUE NOT NULL,
+   password VARCHAR NOT NULL,
+   created_at TIMESTAMP DEFAULT NOW() NOT NULL,
+   updated_at TIMESTAMP DEFAULT NOW() NOT NULL
+);
