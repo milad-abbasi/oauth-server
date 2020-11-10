@@ -27,7 +27,7 @@ func RegisterRoutes(router *echo.Echo, sv *validator.Validate, userService *user
 			return echo.NewHTTPError(http.StatusBadRequest, err)
 		}
 
-		_, err = userService.Register(
+		_, err = userService.NewUser(
 			c.Request().Context(),
 			&user.TinyUser{
 				Name:     dto.Name,
