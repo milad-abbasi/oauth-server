@@ -8,13 +8,13 @@ import (
 
 type Service struct {
 	logger   *zap.Logger
-	userRepo Repository
+	UserRepo Repository
 }
 
 func NewService(logger *zap.Logger, userRepo Repository) *Service {
 	return &Service{
 		logger:   logger.Named("UserService"),
-		userRepo: userRepo,
+		UserRepo: userRepo,
 	}
 }
 
@@ -30,7 +30,7 @@ func (s *Service) NewUser(ctx context.Context, user *TinyUser) (*User, error) {
 		Password: hashedPassword,
 	}
 
-	createdUser, err := s.userRepo.Create(ctx, &newUser)
+	createdUser, err := s.UserRepo.Create(ctx, &newUser)
 	if err != nil {
 		return nil, err
 	}

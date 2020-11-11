@@ -54,6 +54,35 @@ func (r *Repository) Exists(ctx context.Context, email string) (bool, error) {
 	return exists, nil
 }
 
+func (r *Repository) FindOne(ctx context.Context, u *user.User) (*user.User, error) {
+	qBuilder := pgBuilder.Select("*").From(usersTable)
+	if u.Id != "" {
+		qBuilder = qBuilder.Where(sq.Eq{"id": u.Id})
+	}
+	if u.Name != "" {
+		qBuilder = qBuilder.Where(sq.Like{"name": u.Name})
+	}
+	if u.Email != "" {
+		qBuilder = qBuilder.Where(sq.Eq{"email": u.Email})
+	}
+
+	query, args, err := qBuilder.ToSql()
+	if err != nil {
+		return nil, fmt.Errorf("invalid query: %w", err)
+	}
+
+	err = r.pgPool.
+		QueryRow(ctx, query, args...).
+		Scan(&u.Id, &u.Name, &u.Email, &u.Password, &u.CreatedAt, &u.UpdatedAt)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, user.ErrUserNotFound
+	} else if err != nil {
+		return nil, fmt.Errorf("query failed: %w", err)
+	}
+
+	return u, nil
+}
+
 func (r *Repository) Create(ctx context.Context, u *user.User) (*user.User, error) {
 	query, args, err := pgBuilder.
 		Insert(usersTable).

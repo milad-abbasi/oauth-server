@@ -6,3 +6,8 @@ type RegisterDto struct {
 	Password        string `validate:"required,min=5"`
 	ConfirmPassword string `validate:"required,eqfield=Password"`
 }
+
+type LoginDto struct {
+	Email    string `validate:"required,email"`
+	Password string `validate:"required,min=5"`
+}

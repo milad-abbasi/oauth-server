@@ -47,6 +47,42 @@ func RegisterRoutes(router *echo.Echo, sv *validator.Validate, userService *user
 	})
 
 	authRouter.POST("/login", func(c echo.Context) error {
-		return c.String(http.StatusOK, "login")
+		var dto LoginDto
+		if err := c.Bind(&dto); err != nil {
+			return err
+		}
+
+		err := sv.Struct(&dto)
+
+		switch err.(type) {
+		case *validator.InvalidValidationError:
+			return err
+		case validator.ValidationErrors:
+			return echo.NewHTTPError(http.StatusBadRequest, err)
+		}
+
+		u, err := userService.UserRepo.FindOne(
+			c.Request().Context(),
+			&user.User{Email: dto.Email},
+		)
+		if err != nil {
+			if errors.Is(err, user.ErrUserNotFound) {
+				return echo.NewHTTPError(http.StatusForbidden, "invalid credentials")
+			}
+
+			return err
+		}
+
+		ok, err := user.CompareHash(dto.Password, u.Password)
+		if !ok || err != nil {
+			return echo.NewHTTPError(http.StatusForbidden, "invalid credentials")
+		}
+
+		token, err := generateSignedToken("secret", u.Id, u.Email)
+		if err != nil {
+			return err
+		}
+
+		return c.JSON(http.StatusOK, map[string]string{"access": token})
 	})
 }
