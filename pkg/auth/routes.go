@@ -78,7 +78,7 @@ func RegisterRoutes(router *echo.Echo, sv *validator.Validate, userService *user
 			return echo.NewHTTPError(http.StatusForbidden, "invalid credentials")
 		}
 
-		token, err := generateSignedToken("secret", u.Id, u.Email)
+		token, err := NewToken().Sign("")
 		if err != nil {
 			return err
 		}

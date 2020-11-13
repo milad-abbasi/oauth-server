@@ -4,15 +4,45 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+
 	"gopkg.in/square/go-jose.v2"
 	"gopkg.in/square/go-jose.v2/jwt"
 )
 
-type UserClaims struct {
-	Email string `json:"email"`
+type Token struct {
+	ID            string
+	Issuer        string
+	Subject       string
+	Audience      []string
+	Expiry        time.Duration
+	NotBefore     time.Time
+	IssuedAt      time.Time
+	PrivateClaims []interface{}
 }
 
-func generateSignedToken(secret, userId, userEmail string) (string, error) {
+type Expectation struct {
+	Secret   string
+	ID       string
+	Issuer   string
+	Subject  string
+	Audience []string
+	Time     time.Time
+}
+
+func NewToken() *Token {
+	return &Token{
+		ID:            uuid.New().String(),
+		Issuer:        "OAuth-server",
+		Subject:       "",
+		Audience:      []string{""},
+		Expiry:        time.Hour * 6,
+		NotBefore:     time.Now(),
+		IssuedAt:      time.Now(),
+		PrivateClaims: []interface{}{},
+	}
+}
+
+func (t *Token) Sign(secret string) (string, error) {
 	signer, err := jose.NewSigner(
 		jose.SigningKey{Algorithm: jose.HS256, Key: []byte(secret)},
 		(&jose.SignerOptions{}).WithType("JWT"),
@@ -22,19 +52,21 @@ func generateSignedToken(secret, userId, userEmail string) (string, error) {
 	}
 
 	publicClaims := jwt.Claims{
-		ID:        uuid.New().String(),
-		Issuer:    "oauth-server",
-		Subject:   userId,
-		Audience:  jwt.Audience{"user"},
-		Expiry:    jwt.NewNumericDate(time.Now().Add(time.Hour * 6)),
-		NotBefore: jwt.NewNumericDate(time.Now()),
-		IssuedAt:  jwt.NewNumericDate(time.Now()),
-	}
-	userClaims := UserClaims{
-		Email: userEmail,
+		ID:        t.ID,
+		Issuer:    t.Issuer,
+		Subject:   t.Subject,
+		Audience:  jwt.Audience(t.Audience),
+		Expiry:    jwt.NewNumericDate(time.Now().Add(t.Expiry)),
+		NotBefore: jwt.NewNumericDate(t.NotBefore),
+		IssuedAt:  jwt.NewNumericDate(t.IssuedAt),
 	}
 
-	signedToken, err := jwt.Signed(signer).Claims(publicClaims).Claims(userClaims).CompactSerialize()
+	tokenBuilder := jwt.Signed(signer).Claims(publicClaims)
+	for _, claim := range t.PrivateClaims {
+		tokenBuilder = tokenBuilder.Claims(claim)
+	}
+
+	signedToken, err := tokenBuilder.CompactSerialize()
 	if err != nil {
 		return "", err
 	}
@@ -42,33 +74,7 @@ func generateSignedToken(secret, userId, userEmail string) (string, error) {
 	return signedToken, nil
 }
 
-func validateSignedToken(secret, signedToken string) (bool, error) {
-	token, err := jwt.ParseSigned(signedToken)
-	if err != nil {
-		return false, err
-	}
-
-	publicClaims := jwt.Claims{}
-	userClaims := UserClaims{}
-	if err := token.Claims([]byte(secret), &publicClaims, &userClaims); err != nil {
-		return false, err
-	}
-
-	err = publicClaims.Validate(jwt.Expected{
-		Issuer: "oauth-server",
-		// Subject:  "user-id",
-		// Audience: jwt.Audience{"user"},
-		// ID:       "",
-		Time: time.Now(),
-	})
-	if err != nil {
-		return false, err
-	}
-
-	return true, nil
-}
-
-func generateEncryptedToken(secret, userId, userEmail string) (string, error) {
+func (t *Token) Encrypt(secret string) (string, error) {
 	encryption, err := jose.NewEncrypter(
 		jose.A128CBC_HS256,
 		jose.Recipient{Algorithm: jose.PBES2_HS256_A128KW, Key: []byte(secret)},
@@ -78,20 +84,22 @@ func generateEncryptedToken(secret, userId, userEmail string) (string, error) {
 		return "", err
 	}
 
-	publicClaim := jwt.Claims{
-		ID:        uuid.New().String(),
-		Issuer:    "oauth-server",
-		Subject:   userId,
-		Audience:  jwt.Audience{"user"},
-		Expiry:    jwt.NewNumericDate(time.Now().Add(time.Hour * 6)),
-		NotBefore: jwt.NewNumericDate(time.Now()),
-		IssuedAt:  jwt.NewNumericDate(time.Now()),
-	}
-	userClaims := UserClaims{
-		Email: userEmail,
+	publicClaims := jwt.Claims{
+		ID:        t.ID,
+		Issuer:    t.Issuer,
+		Subject:   t.Subject,
+		Audience:  jwt.Audience(t.Audience),
+		Expiry:    jwt.NewNumericDate(time.Now().Add(t.Expiry)),
+		NotBefore: jwt.NewNumericDate(t.NotBefore),
+		IssuedAt:  jwt.NewNumericDate(t.IssuedAt),
 	}
 
-	encryptedToken, err := jwt.Encrypted(encryption).Claims(publicClaim).Claims(userClaims).CompactSerialize()
+	tokenBuilder := jwt.Encrypted(encryption).Claims(publicClaims)
+	for _, claim := range t.PrivateClaims {
+		tokenBuilder = tokenBuilder.Claims(claim)
+	}
+
+	encryptedToken, err := tokenBuilder.CompactSerialize()
 	if err != nil {
 		return "", err
 	}
@@ -99,24 +107,50 @@ func generateEncryptedToken(secret, userId, userEmail string) (string, error) {
 	return encryptedToken, nil
 }
 
-func validateEncryptedToken(secret, encryptedToken string) (bool, error) {
-	token, err := jwt.ParseEncrypted(encryptedToken)
+func ValidateSignedToken(signedToken string, e *Expectation, publicClaims *jwt.Claims, privateClaims ...interface{}) (bool, error) {
+	token, err := jwt.ParseSigned(signedToken)
 	if err != nil {
 		return false, err
 	}
 
-	publicClaims := jwt.Claims{}
-	userClaims := UserClaims{}
-	if err := token.Claims([]byte(secret), &publicClaims, &userClaims); err != nil {
+	claims := []interface{}{publicClaims}
+	claims = append(claims, privateClaims...)
+	if err := token.Claims([]byte(e.Secret), claims...); err != nil {
 		return false, err
 	}
 
 	err = publicClaims.Validate(jwt.Expected{
-		Issuer: "oauth-server",
-		// Subject:  "user-id",
-		// Audience: jwt.Audience{"user"},
-		// ID:       "",
-		Time: time.Now(),
+		ID:       e.ID,
+		Issuer:   e.Issuer,
+		Subject:  e.Subject,
+		Audience: jwt.Audience(e.Audience),
+		Time:     e.Time,
+	})
+	if err != nil {
+		return false, err
+	}
+
+	return true, nil
+}
+
+func ValidateEncryptedToken(signedToken string, e *Expectation, publicClaims *jwt.Claims, privateClaims ...interface{}) (bool, error) {
+	token, err := jwt.ParseEncrypted(signedToken)
+	if err != nil {
+		return false, err
+	}
+
+	claims := []interface{}{publicClaims}
+	claims = append(claims, privateClaims...)
+	if err := token.Claims([]byte(e.Secret), claims...); err != nil {
+		return false, err
+	}
+
+	err = publicClaims.Validate(jwt.Expected{
+		ID:       e.ID,
+		Issuer:   e.Issuer,
+		Subject:  e.Subject,
+		Audience: jwt.Audience(e.Audience),
+		Time:     e.Time,
 	})
 	if err != nil {
 		return false, err

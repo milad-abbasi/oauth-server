@@ -16,3 +16,7 @@ type TinyUser struct {
 	Email    string
 	Password string
 }
+
+type Claims struct {
+	Email string `json:"email"`
+}

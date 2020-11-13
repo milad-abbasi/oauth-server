@@ -1,15 +1,15 @@
-package config
+package common
 
 import (
 	"fmt"
 	"os"
 )
 
-func Get(key string) string {
+func GetEnv(key string) string {
 	return os.Getenv(key)
 }
 
-func GetWithDefault(key, defaultValue string) string {
+func GetEnvWithDefault(key, defaultValue string) string {
 	val, exists := os.LookupEnv(key)
 
 	if exists {
@@ -19,7 +19,7 @@ func GetWithDefault(key, defaultValue string) string {
 	return defaultValue
 }
 
-func MustGet(key string) string {
+func MustGetEnv(key string) string {
 	val, exists := os.LookupEnv(key)
 
 	if !exists {
