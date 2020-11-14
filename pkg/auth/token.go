@@ -3,8 +3,6 @@ package auth
 import (
 	"time"
 
-	"github.com/google/uuid"
-
 	"gopkg.in/square/go-jose.v2"
 	"gopkg.in/square/go-jose.v2/jwt"
 )
@@ -27,19 +25,6 @@ type Expectation struct {
 	Subject  string
 	Audience []string
 	Time     time.Time
-}
-
-func NewToken() *Token {
-	return &Token{
-		ID:            uuid.New().String(),
-		Issuer:        "OAuth-server",
-		Subject:       "",
-		Audience:      []string{""},
-		Expiry:        time.Hour * 6,
-		NotBefore:     time.Now(),
-		IssuedAt:      time.Now(),
-		PrivateClaims: []interface{}{},
-	}
 }
 
 func (t *Token) Sign(secret string) (string, error) {

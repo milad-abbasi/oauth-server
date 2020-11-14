@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/brpaz/echozap"
-	"github.com/go-playground/validator/v10"
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/log/zapadapter"
 	"github.com/jackc/pgx/v4/pgxpool"
@@ -48,11 +47,6 @@ func main() {
 	}
 	defer pgPool.Close()
 
-	userRepo := userPgRepo.New(logger, pgPool)
-	userService := user.NewService(logger, userRepo)
-
-	structValidator := validator.New()
-
 	router := echo.New()
 	router.Debug = true
 	router.Logger.SetLevel(log.DEBUG)
@@ -62,7 +56,13 @@ func main() {
 		middleware.Recover(),
 		echozap.ZapLogger(logger),
 	)
-	auth.RegisterRoutes(router, structValidator, userService)
+
+	userRepo := userPgRepo.New(logger, pgPool)
+	userService := user.NewService(logger, userRepo)
+	authService := auth.NewService(logger, userService)
+
+	validator := common.NewValidator()
+	auth.NewController(logger, router, validator, authService).RegisterRoutes()
 	user.RegisterRoutes(router)
 
 	router.Logger.Fatal(router.Start(fmt.Sprintf("0.0.0.0:%s", common.GetEnvWithDefault("HTTP_PORT", "1234"))))
