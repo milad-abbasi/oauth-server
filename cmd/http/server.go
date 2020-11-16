@@ -8,7 +8,6 @@ import (
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/log/zapadapter"
 	"github.com/jackc/pgx/v4/pgxpool"
-	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/labstack/gommon/log"
@@ -29,10 +28,6 @@ func main() {
 			logger.Error(err.Error())
 		}
 	}()
-
-	if err := godotenv.Load(".env"); err != nil {
-		logger.Warn(err.Error())
-	}
 
 	pgConfig, err := pgxpool.ParseConfig(common.MustGetEnv("POSTGRES_URI"))
 	if err != nil {
@@ -63,7 +58,7 @@ func main() {
 
 	validator := common.NewValidator()
 	auth.NewController(logger, router, validator, authService).RegisterRoutes()
-	user.RegisterRoutes(router)
+	user.NewController(logger, router, validator, userService).RegisterRoutes()
 
 	router.Logger.Fatal(router.Start(fmt.Sprintf("0.0.0.0:%s", common.GetEnvWithDefault("HTTP_PORT", "1234"))))
 }

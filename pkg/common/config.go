@@ -2,8 +2,17 @@ package common
 
 import (
 	"fmt"
+	"log"
 	"os"
+
+	"github.com/joho/godotenv"
 )
+
+func init() {
+	if err := godotenv.Load(".env"); err != nil {
+		log.Println("Env file does not exist")
+	}
+}
 
 func GetEnv(key string) string {
 	return os.Getenv(key)

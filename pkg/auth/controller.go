@@ -32,9 +32,9 @@ func NewController(
 }
 
 func (con *Controller) RegisterRoutes() {
-	authRouter := con.r.Group("/auth")
-	authRouter.POST("/register", con.Register)
-	authRouter.POST("/login", con.Login)
+	router := con.r.Group("/auth")
+	router.POST("/register", con.Register)
+	router.POST("/login", con.Login)
 }
 
 func (con *Controller) Register(c echo.Context) error {
