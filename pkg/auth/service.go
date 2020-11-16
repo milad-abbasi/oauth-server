@@ -117,7 +117,7 @@ func (s *Service) generateTokens(subject string) (*Tokens, error) {
 
 	return &Tokens{
 		TokenType:    "Bearer",
-		ExpiresIn:    (time.Hour * time.Duration(ate)).Seconds(),
+		ExpiresIn:    int((time.Hour * time.Duration(ate)).Seconds()),
 		Scope:        "read write",
 		AccessToken:  sat,
 		RefreshToken: srt,
