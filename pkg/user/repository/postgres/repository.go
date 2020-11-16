@@ -56,8 +56,8 @@ func (r *Repository) Exists(ctx context.Context, email string) (bool, error) {
 
 func (r *Repository) FindOne(ctx context.Context, u *user.User) (*user.User, error) {
 	qBuilder := pgBuilder.Select("*").From(usersTable)
-	if u.Id != "" {
-		qBuilder = qBuilder.Where(sq.Eq{"id": u.Id})
+	if u.ID != "" {
+		qBuilder = qBuilder.Where(sq.Eq{"id": u.ID})
 	}
 	if u.Name != "" {
 		qBuilder = qBuilder.Where(sq.Like{"name": u.Name})
@@ -73,7 +73,7 @@ func (r *Repository) FindOne(ctx context.Context, u *user.User) (*user.User, err
 
 	err = r.pgPool.
 		QueryRow(ctx, query, args...).
-		Scan(&u.Id, &u.Name, &u.Email, &u.Password, &u.CreatedAt, &u.UpdatedAt)
+		Scan(&u.ID, &u.Name, &u.Email, &u.Password, &u.CreatedAt, &u.UpdatedAt)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, user.ErrUserNotFound
 	} else if err != nil {
@@ -96,7 +96,7 @@ func (r *Repository) Create(ctx context.Context, u *user.User) (*user.User, erro
 
 	err = r.pgPool.
 		QueryRow(ctx, query, args...).
-		Scan(&u.Id, &u.CreatedAt, &u.UpdatedAt)
+		Scan(&u.ID, &u.CreatedAt, &u.UpdatedAt)
 
 	if err != nil {
 		var pgErr *pgconn.PgError

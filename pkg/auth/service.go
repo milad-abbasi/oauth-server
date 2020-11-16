@@ -39,7 +39,7 @@ func (s *Service) Register(ctx context.Context, ri *RegisterInfo) (*Tokens, erro
 		return nil, err
 	}
 
-	tokens, err := s.generateTokens(u.Id)
+	tokens, err := s.generateTokens(u.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -65,7 +65,7 @@ func (s *Service) Login(ctx context.Context, li *LoginInfo) (*Tokens, error) {
 		return nil, ErrInvalidCredentials
 	}
 
-	tokens, err := s.generateTokens(u.Id)
+	tokens, err := s.generateTokens(u.ID)
 	if err != nil {
 		return nil, err
 	}

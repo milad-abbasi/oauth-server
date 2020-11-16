@@ -16,7 +16,7 @@ migrate:
 
 # Start task starts http server up and writes it's process id to PID_FILE.
 start:
-	@go run cmd/http/server.go 2>&1 & echo $$! > ${PID_FILE}
+	@go run -race cmd/http/server.go 2>&1 & echo $$! > ${PID_FILE}
 # You can also use go build command for start task
 # start:
 #   go build -o /bin/http-server cmd/http/server.go && \

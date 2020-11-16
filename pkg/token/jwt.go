@@ -1,6 +1,7 @@
 package token
 
 import (
+	"strings"
 	"time"
 
 	"gopkg.in/square/go-jose.v2"
@@ -92,7 +93,7 @@ func (j *JWT) Encrypt(secret string) (string, error) {
 	return encryptedToken, nil
 }
 
-func ValidateSignedToken(signedToken string, e *Expectation, publicClaims *jwt.Claims, privateClaims ...interface{}) (bool, error) {
+func ValidateSignedJwt(signedToken string, e *Expectation, publicClaims *jwt.Claims, privateClaims ...interface{}) (bool, error) {
 	token, err := jwt.ParseSigned(signedToken)
 	if err != nil {
 		return false, err
@@ -118,7 +119,7 @@ func ValidateSignedToken(signedToken string, e *Expectation, publicClaims *jwt.C
 	return true, nil
 }
 
-func ValidateEncryptedToken(signedToken string, e *Expectation, publicClaims *jwt.Claims, privateClaims ...interface{}) (bool, error) {
+func ValidateEncryptedJwt(signedToken string, e *Expectation, publicClaims *jwt.Claims, privateClaims ...interface{}) (bool, error) {
 	token, err := jwt.ParseEncrypted(signedToken)
 	if err != nil {
 		return false, err
@@ -142,4 +143,8 @@ func ValidateEncryptedToken(signedToken string, e *Expectation, publicClaims *jw
 	}
 
 	return true, nil
+}
+
+func ExtractBearerJwt(token string) string {
+	return strings.Replace(token, "Bearer ", "", 1)
 }

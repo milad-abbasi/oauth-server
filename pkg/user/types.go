@@ -3,7 +3,7 @@ package user
 import "time"
 
 type User struct {
-	Id        string    `json:"id"`
+	ID        string    `json:"id"`
 	Name      string    `json:"name"`
 	Email     string    `json:"email"`
 	Password  string    `json:"password"`
@@ -19,4 +19,8 @@ type TinyUser struct {
 
 type Claims struct {
 	Email string `json:"email"`
+}
+
+type Identity struct {
+	ID string
 }
