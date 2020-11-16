@@ -8,6 +8,8 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/milad-abbasi/oauth-server/pkg/common"
+	"github.com/milad-abbasi/oauth-server/pkg/hash"
+	"github.com/milad-abbasi/oauth-server/pkg/token"
 	"github.com/milad-abbasi/oauth-server/pkg/user"
 	"go.uber.org/zap"
 )
@@ -58,7 +60,7 @@ func (s *Service) Login(ctx context.Context, li *LoginInfo) (*Tokens, error) {
 		return nil, err
 	}
 
-	ok, err := user.CompareHash(li.Password, u.Password)
+	ok, err := hash.CompareArgon2Hash(li.Password, u.Password)
 	if !ok || err != nil {
 		return nil, ErrInvalidCredentials
 	}
@@ -88,25 +90,21 @@ func (s *Service) generateTokens(subject string) (*Tokens, error) {
 		panic(err)
 	}
 
-	at := Token{
-		ID:            uuid.New().String(),
-		Issuer:        issuer,
-		Subject:       subject,
-		Audience:      []string{},
-		Expiry:        time.Hour * time.Duration(ate),
-		NotBefore:     time.Now(),
-		IssuedAt:      time.Now(),
-		PrivateClaims: []interface{}{},
+	at := token.JWT{
+		ID:        uuid.New().String(),
+		Issuer:    issuer,
+		Subject:   subject,
+		Expiry:    time.Hour * time.Duration(ate),
+		NotBefore: time.Now(),
+		IssuedAt:  time.Now(),
 	}
-	rt := Token{
-		ID:            uuid.New().String(),
-		Issuer:        issuer,
-		Subject:       subject,
-		Audience:      []string{},
-		Expiry:        time.Hour * time.Duration(rte),
-		NotBefore:     time.Now(),
-		IssuedAt:      time.Now(),
-		PrivateClaims: []interface{}{},
+	rt := token.JWT{
+		ID:        uuid.New().String(),
+		Issuer:    issuer,
+		Subject:   subject,
+		Expiry:    time.Hour * time.Duration(rte),
+		NotBefore: time.Now(),
+		IssuedAt:  time.Now(),
 	}
 
 	sat, err := at.Sign(secret)

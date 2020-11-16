@@ -3,6 +3,7 @@ package user
 import (
 	"context"
 
+	"github.com/milad-abbasi/oauth-server/pkg/hash"
 	"go.uber.org/zap"
 )
 
@@ -19,7 +20,7 @@ func NewService(logger *zap.Logger, userRepo Repository) *Service {
 }
 
 func (s *Service) NewUser(ctx context.Context, user *TinyUser) (*User, error) {
-	hashedPassword, err := GenerateHash(user.Password)
+	hashedPassword, err := hash.GenerateArgon2Hash(user.Password)
 	if err != nil {
 		return nil, err
 	}

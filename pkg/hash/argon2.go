@@ -1,4 +1,4 @@
-package user
+package hash
 
 import (
 	"crypto/rand"
@@ -10,25 +10,25 @@ import (
 	"golang.org/x/crypto/argon2"
 )
 
-type HashConfig struct {
+type ArgonConfig struct {
 	time    uint32
 	memory  uint32
 	threads uint8
 	keyLen  uint32
 }
 
-func GenerateHash(input string) (string, error) {
-	config := HashConfig{
-		time:    1,
-		memory:  64 * 1024,
-		threads: 4,
-		keyLen:  32,
-	}
-
-	return GenerateHashWithConfig(input, &config)
+var DefaultArgonConfig = ArgonConfig{
+	time:    1,
+	memory:  64 * 1024,
+	threads: 4,
+	keyLen:  32,
 }
 
-func GenerateHashWithConfig(input string, c *HashConfig) (string, error) {
+func GenerateArgon2Hash(input string) (string, error) {
+	return GenerateArgon2HashWithConfig(input, &DefaultArgonConfig)
+}
+
+func GenerateArgon2HashWithConfig(input string, c *ArgonConfig) (string, error) {
 	salt := make([]byte, 16)
 	if _, err := rand.Read(salt); err != nil {
 		return "", err
@@ -45,10 +45,10 @@ func GenerateHashWithConfig(input string, c *HashConfig) (string, error) {
 	return full, nil
 }
 
-func CompareHash(input, hash string) (bool, error) {
+func CompareArgon2Hash(input, hash string) (bool, error) {
 	parts := strings.Split(hash, "$")
 
-	c := &HashConfig{}
+	c := &ArgonConfig{}
 	_, err := fmt.Sscanf(parts[3], "m=%d,t=%d,p=%d", &c.memory, &c.time, &c.threads)
 	if err != nil {
 		return false, err

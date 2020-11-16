@@ -1,4 +1,4 @@
-package auth
+package token
 
 import (
 	"time"
@@ -7,7 +7,7 @@ import (
 	"gopkg.in/square/go-jose.v2/jwt"
 )
 
-type Token struct {
+type JWT struct {
 	ID            string
 	Issuer        string
 	Subject       string
@@ -27,7 +27,7 @@ type Expectation struct {
 	Time     time.Time
 }
 
-func (t *Token) Sign(secret string) (string, error) {
+func (j *JWT) Sign(secret string) (string, error) {
 	signer, err := jose.NewSigner(
 		jose.SigningKey{Algorithm: jose.HS256, Key: []byte(secret)},
 		(&jose.SignerOptions{}).WithType("JWT"),
@@ -37,17 +37,17 @@ func (t *Token) Sign(secret string) (string, error) {
 	}
 
 	publicClaims := jwt.Claims{
-		ID:        t.ID,
-		Issuer:    t.Issuer,
-		Subject:   t.Subject,
-		Audience:  jwt.Audience(t.Audience),
-		Expiry:    jwt.NewNumericDate(time.Now().Add(t.Expiry)),
-		NotBefore: jwt.NewNumericDate(t.NotBefore),
-		IssuedAt:  jwt.NewNumericDate(t.IssuedAt),
+		ID:        j.ID,
+		Issuer:    j.Issuer,
+		Subject:   j.Subject,
+		Audience:  jwt.Audience(j.Audience),
+		Expiry:    jwt.NewNumericDate(time.Now().Add(j.Expiry)),
+		NotBefore: jwt.NewNumericDate(j.NotBefore),
+		IssuedAt:  jwt.NewNumericDate(j.IssuedAt),
 	}
 
 	tokenBuilder := jwt.Signed(signer).Claims(publicClaims)
-	for _, claim := range t.PrivateClaims {
+	for _, claim := range j.PrivateClaims {
 		tokenBuilder = tokenBuilder.Claims(claim)
 	}
 
@@ -59,7 +59,7 @@ func (t *Token) Sign(secret string) (string, error) {
 	return signedToken, nil
 }
 
-func (t *Token) Encrypt(secret string) (string, error) {
+func (j *JWT) Encrypt(secret string) (string, error) {
 	encryption, err := jose.NewEncrypter(
 		jose.A128CBC_HS256,
 		jose.Recipient{Algorithm: jose.PBES2_HS256_A128KW, Key: []byte(secret)},
@@ -70,17 +70,17 @@ func (t *Token) Encrypt(secret string) (string, error) {
 	}
 
 	publicClaims := jwt.Claims{
-		ID:        t.ID,
-		Issuer:    t.Issuer,
-		Subject:   t.Subject,
-		Audience:  jwt.Audience(t.Audience),
-		Expiry:    jwt.NewNumericDate(time.Now().Add(t.Expiry)),
-		NotBefore: jwt.NewNumericDate(t.NotBefore),
-		IssuedAt:  jwt.NewNumericDate(t.IssuedAt),
+		ID:        j.ID,
+		Issuer:    j.Issuer,
+		Subject:   j.Subject,
+		Audience:  jwt.Audience(j.Audience),
+		Expiry:    jwt.NewNumericDate(time.Now().Add(j.Expiry)),
+		NotBefore: jwt.NewNumericDate(j.NotBefore),
+		IssuedAt:  jwt.NewNumericDate(j.IssuedAt),
 	}
 
 	tokenBuilder := jwt.Encrypted(encryption).Claims(publicClaims)
-	for _, claim := range t.PrivateClaims {
+	for _, claim := range j.PrivateClaims {
 		tokenBuilder = tokenBuilder.Claims(claim)
 	}
 
