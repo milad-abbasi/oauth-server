@@ -12,7 +12,8 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/labstack/gommon/log"
 	"github.com/milad-abbasi/oauth-server/pkg/auth"
-	"github.com/milad-abbasi/oauth-server/pkg/common"
+	"github.com/milad-abbasi/oauth-server/pkg/common/config"
+	"github.com/milad-abbasi/oauth-server/pkg/common/validator"
 	"github.com/milad-abbasi/oauth-server/pkg/user"
 	userPgRepo "github.com/milad-abbasi/oauth-server/pkg/user/repository/postgres"
 	"go.uber.org/zap"
@@ -29,7 +30,7 @@ func main() {
 		}
 	}()
 
-	pgConfig, err := pgxpool.ParseConfig(common.MustGetEnv("POSTGRES_URI"))
+	pgConfig, err := pgxpool.ParseConfig(config.MustGetEnv("POSTGRES_URI"))
 	if err != nil {
 		logger.Fatal("Failed to parse postgres uri", zap.Error(err))
 	}
@@ -56,9 +57,9 @@ func main() {
 	userService := user.NewService(logger, userRepo)
 	authService := auth.NewService(logger, userService)
 
-	validator := common.NewValidator()
-	auth.NewController(logger, router, validator, authService).RegisterRoutes()
-	user.NewController(logger, router, validator, userService).RegisterRoutes()
+	structValidator := validator.NewStructValidator()
+	auth.NewController(logger, router, structValidator, authService).RegisterRoutes()
+	user.NewController(logger, router, structValidator, userService).RegisterRoutes()
 
-	router.Logger.Fatal(router.Start(fmt.Sprintf("0.0.0.0:%s", common.GetEnvWithDefault("HTTP_PORT", "1234"))))
+	router.Logger.Fatal(router.Start(fmt.Sprintf("0.0.0.0:%s", config.GetEnvWithDefault("HTTP_PORT", "1234"))))
 }

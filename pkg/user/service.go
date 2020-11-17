@@ -3,7 +3,7 @@ package user
 import (
 	"context"
 
-	"github.com/milad-abbasi/oauth-server/pkg/hash"
+	"github.com/milad-abbasi/oauth-server/pkg/common/hash"
 	"go.uber.org/zap"
 )
 

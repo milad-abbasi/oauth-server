@@ -22,5 +22,11 @@ type Claims struct {
 }
 
 type Identity struct {
-	ID string
+	ID string `json:"sub"`
+}
+
+type Info struct {
+	ID    string `json:"id"`
+	Name  string `json:"name"`
+	Email string `json:"email"`
 }

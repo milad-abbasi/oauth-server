@@ -7,9 +7,9 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/milad-abbasi/oauth-server/pkg/common"
-	"github.com/milad-abbasi/oauth-server/pkg/hash"
-	"github.com/milad-abbasi/oauth-server/pkg/token"
+	"github.com/milad-abbasi/oauth-server/pkg/common/config"
+	"github.com/milad-abbasi/oauth-server/pkg/common/hash"
+	"github.com/milad-abbasi/oauth-server/pkg/common/token"
 	"github.com/milad-abbasi/oauth-server/pkg/user"
 	"go.uber.org/zap"
 )
@@ -74,15 +74,15 @@ func (s *Service) Login(ctx context.Context, li *LoginInfo) (*Tokens, error) {
 }
 
 func (s *Service) generateTokens(subject string) (*Tokens, error) {
-	secret := common.MustGetEnv("TOKEN_SECRET")
-	issuer := common.GetEnvWithDefault("TOKEN_ISSUER", "OAuth-server")
+	secret := config.MustGetEnv("TOKEN_SECRET")
+	issuer := config.GetEnvWithDefault("TOKEN_ISSUER", "OAuth-server")
 	ate, err := strconv.Atoi(
-		common.GetEnvWithDefault(
+		config.GetEnvWithDefault(
 			"ACCESS_TOKEN_EXPIRY",
 			"10"),
 	)
 	rte, err := strconv.Atoi(
-		common.GetEnvWithDefault(
+		config.GetEnvWithDefault(
 			"REFRESH_TOKEN_EXPIRY",
 			"100"),
 	)

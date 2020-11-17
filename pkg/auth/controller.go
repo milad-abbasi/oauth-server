@@ -5,29 +5,29 @@ import (
 	"net/http"
 
 	"github.com/labstack/echo/v4"
-	"github.com/milad-abbasi/oauth-server/pkg/common"
+	"github.com/milad-abbasi/oauth-server/pkg/common/validator"
 	"github.com/milad-abbasi/oauth-server/pkg/user"
 	"go.uber.org/zap"
 )
 
 type Controller struct {
-	l *zap.Logger
-	r *echo.Echo
-	v *common.Validator
-	s *Service
+	l  *zap.Logger
+	r  *echo.Echo
+	sv *validator.StructValidator
+	s  *Service
 }
 
 func NewController(
 	logger *zap.Logger,
 	router *echo.Echo,
-	validator *common.Validator,
+	validator *validator.StructValidator,
 	service *Service,
 ) *Controller {
 	return &Controller{
-		l: logger.Named("AuthController"),
-		r: router,
-		v: validator,
-		s: service,
+		l:  logger.Named("AuthController"),
+		r:  router,
+		sv: validator,
+		s:  service,
 	}
 }
 
@@ -43,7 +43,7 @@ func (con *Controller) Register(c echo.Context) error {
 		return err
 	}
 
-	err := con.v.Validate(&dto)
+	err := con.sv.Validate(&dto)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err)
 	}
@@ -73,7 +73,7 @@ func (con *Controller) Login(c echo.Context) error {
 		return err
 	}
 
-	err := con.v.Validate(&dto)
+	err := con.sv.Validate(&dto)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err)
 	}
