@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/brpaz/echozap"
+	"github.com/go-redis/redis/v8"
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/log/zapadapter"
 	"github.com/jackc/pgx/v4/pgxpool"
@@ -26,22 +27,34 @@ func main() {
 	}
 	defer func() {
 		if err := logger.Sync(); err != nil {
-			logger.Error(err.Error())
+			logger.Panic("Failed to sync zap logger", zap.Error(err))
 		}
 	}()
 
 	pgConfig, err := pgxpool.ParseConfig(config.MustGetEnv("POSTGRES_URI"))
 	if err != nil {
-		logger.Fatal("Failed to parse postgres uri", zap.Error(err))
+		logger.Panic("Failed to parse postgres uri", zap.Error(err))
 	}
 	pgConfig.ConnConfig.Logger = zapadapter.NewLogger(logger)
 	pgConfig.ConnConfig.LogLevel = pgx.LogLevelTrace
 
 	pgPool, err := pgxpool.ConnectConfig(context.Background(), pgConfig)
 	if err != nil {
-		logger.Fatal("Failed to establish a connection to postgres", zap.Error(err))
+		logger.Panic("Failed to establish a connection to postgres", zap.Error(err))
 	}
 	defer pgPool.Close()
+
+	ro, err := redis.ParseURL(config.MustGetEnv("REDIS_URI"))
+	if err != nil {
+		logger.Panic("Failed to parse redis uri", zap.Error(err))
+	}
+
+	redisPool := redis.NewClient(ro)
+	defer func() {
+		if err := redisPool.Close(); err != nil {
+			logger.Panic("Failed to terminate redis client", zap.Error(err))
+		}
+	}()
 
 	router := echo.New()
 	router.Debug = true
@@ -61,5 +74,5 @@ func main() {
 	auth.NewController(logger, router, structValidator, authService).RegisterRoutes()
 	user.NewController(logger, router, structValidator, userService).RegisterRoutes()
 
-	router.Logger.Fatal(router.Start(fmt.Sprintf("0.0.0.0:%s", config.GetEnvWithDefault("HTTP_PORT", "1234"))))
+	logger.Panic(router.Start(fmt.Sprintf("0.0.0.0:%s", config.GetEnvWithDefault("HTTP_PORT", "1234"))).Error())
 }

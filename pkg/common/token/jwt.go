@@ -146,5 +146,5 @@ func ValidateEncryptedJwt(signedToken string, e *Expectation, publicClaims *jwt.
 }
 
 func ExtractBearerJwt(token string) string {
-	return strings.Replace(token, "Bearer ", "", 1)
+	return strings.TrimPrefix(token, "Bearer ")
 }

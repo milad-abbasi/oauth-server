@@ -6,6 +6,7 @@ require (
 	github.com/Masterminds/squirrel v1.4.0
 	github.com/brpaz/echozap v1.1.0
 	github.com/go-playground/validator/v10 v10.4.1
+	github.com/go-redis/redis/v8 v8.3.4
 	github.com/golang-migrate/migrate/v4 v4.13.0
 	github.com/google/uuid v1.1.2
 	github.com/jackc/pgconn v1.7.2
